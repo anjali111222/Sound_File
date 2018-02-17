@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/donationcafe"
+        android:title="@string/donation_cafe"
+        app:actionLayout="@layout/switch_item" />
+
+    <item
+        android:id="@+id/Settings"
+        android:title="@string/setting"
+        app:actionLayout="@layout/switch_item" />
+    <item
+        android:id="@+id/startlogging"
+        android:title="@string/start_logging"
+        app:actionLayout="@layout/switch_item" />
+
+    <item
+        android:id="@+id/Log_List"
+        android:title="@string/log_list"
+        app:actionLayout="@layout/switch_item" />
+
+</menu>
