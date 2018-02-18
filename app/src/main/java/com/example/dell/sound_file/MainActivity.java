@@ -1,6 +1,7 @@
 package com.example.dell.sound_file;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -35,6 +36,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 import edu.emory.mathcs.jtransforms.fft.DoubleFFT_1D;
@@ -155,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
         value = voice_data;
         //
         textView.setText(voice_data);
+        Date currentTime = Calendar.getInstance().getTime();
         S_NO++;
         File Root = Environment.getExternalStorageDirectory();
         try {
@@ -167,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
 //                randomAccessFile.write(textView1.getText().toString().getBytes(),3,6);
 //                randomAccessFile.write(textView2.getText().toString().getBytes(),3,6);
 //                randomAccessFile.write(textView3.getText().toString().getBytes(),3,6);
-            String store = S_NO + "\t" + fileName + "\t" + voice_data + "\t" + latitude + "\t" + longitude + "\n";
+            String store = S_NO + "\t" + currentTime + "\t" + voice_data + "\t" + latitude + "\t" + longitude + "\n";
             randomAccessFile.write(store.getBytes());
         } catch (IOException e) {
             e.printStackTrace();
@@ -248,10 +251,8 @@ public class MainActivity extends AppCompatActivity {
 
                 final float linearFftTimeDisplay[] = new float[BLOCK_SIZE_FFT / 2];
                 final float linearFftATimeDisplay[] = new float[BLOCK_SIZE_FFT / 2];
-
                 int initial_delay = 0;
                 while (isRecording) {
-
                     //I read the data
                     recorder.read(rawData, 0, BLOCK_SIZE_FFT);
                     // an initial delay was introduced because at activation there were very high levels of running leq (> 100 dB) and low low (10 dB) due perhaps to the initial startup of the peripheral
@@ -292,7 +293,6 @@ public class MainActivity extends AppCompatActivity {
 
                             double re = audioDataForFFT[j];
                             double im = audioDataForFFT[j + 1];
-
                             // Magnitude
                             double mag = Math.sqrt((re * re) + (im * im));
 
@@ -581,6 +581,7 @@ public class MainActivity extends AppCompatActivity {
                                     Log.v("NOISE", String.valueOf(dbATimeDisplay));
                                     if (start_flag == 1 && latitude != null && longitude != null) {
                                         setValue(String.valueOf(dbATimeDisplay), latitude, longitude);
+                                        LogedFile(dbATimeDisplay);
                                         //textView.setText(String.valueOf(dbATimeDisplay));
                                     }
 
@@ -747,7 +748,46 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void LogedFile(double voice_data) {
+        double value = voice_data;
+        String val = "null";
+        //int foo = Integer.parseInt(myString);
+        textView.setText(Double.toString(voice_data));
+        Date currentTime = Calendar.getInstance().getTime();
+//        Calendar cal = Calendar.getInstance();
+//        String date_time=dateFormat.format(cal);
+        //Date currentTime= Calendar.getInstance().getTime();
+        if (value >= 0 && value <= 40) {
+            val = "wishpering";
+        } else if (value >= 41 && value <= 60) {
+            val = "normal";
+        } else if (value >= 61 && value <= 80) {
+            val = "high";
+        } else if (value >= 81 && value <= 100) {
+            val = "noise";
+        }
+        File Root = Environment.getExternalStorageDirectory();
+        try {
+            randomAccessFile = new RandomAccessFile(Root + "/" + fileName + "/SOUND1.txt", "rw");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        try {
+            randomAccessFile.seek(randomAccessFile.length());
+//                randomAccessFile.write(textView1.getText().toString().getBytes(),3,6);
+//                randomAccessFile.write(textView2.getText().toString().getBytes(),3,6);
+//                randomAccessFile.write(textView3.getText().toString().getBytes(),3,6);
+            String store = currentTime + "\t" + textView.getText().toString() + "\t" + val + "\n";
+            randomAccessFile.write(store.getBytes());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //Toast.makeText(this, "Hello", Toast.LENGTH_SHORT).show();
+    }
+
     private class MyLocationListener implements LocationListener {
+        @SuppressLint("SetTextI18n")
         public void onLocationChanged(Location location) {
             latitude = "" + location.getLatitude();
             longitude = "" + location.getLongitude();
