@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     File Dir, Dir1;
     FileOutputStream fileOutputStream = null;
     RandomAccessFile randomAccessFile;
+    int S_NO = 0;
     Button start_button, stop_button, exit_button, btnYes, btnNo;
     TextView textView;
     String gainString;
@@ -82,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
     int kkk = 0; // controllo per bontà leq bande: solo se kkk > 10 misurano bene
     String path1;
     String value = " data";
-    String msg;
+    String latitude, longitude;
     private int start_flag = 0;
     private DoubleFFT_1D fft = null;
     // Terzi d'ottava
@@ -150,12 +151,11 @@ public class MainActivity extends AppCompatActivity {
         startRecording(gain, finalCountTimeDisplay, finalCountTimeLog);
     }
 
-    public void setValue(String voice_data, String location_data) {
+    public void setValue(String voice_data, String latitude, String longitude) {
         value = voice_data;
-
         //
         textView.setText(voice_data);
-
+        S_NO++;
         File Root = Environment.getExternalStorageDirectory();
         try {
             randomAccessFile = new RandomAccessFile(Root + "/" + fileName + "/SOUND.txt", "rw");
@@ -167,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
 //                randomAccessFile.write(textView1.getText().toString().getBytes(),3,6);
 //                randomAccessFile.write(textView2.getText().toString().getBytes(),3,6);
 //                randomAccessFile.write(textView3.getText().toString().getBytes(),3,6);
-            String store = voice_data + "    " + location_data + "\n";
+            String store = S_NO + "\t" + fileName + "\t" + voice_data + "\t" + latitude + "\t" + longitude + "\n";
             randomAccessFile.write(store.getBytes());
         } catch (IOException e) {
             e.printStackTrace();
@@ -254,29 +254,21 @@ public class MainActivity extends AppCompatActivity {
 
                     //I read the data
                     recorder.read(rawData, 0, BLOCK_SIZE_FFT);
-
                     // an initial delay was introduced because at activation there were very high levels of running leq (> 100 dB) and low low (10 dB) due perhaps to the initial startup of the peripheral
                     initial_delay++;
-
                     if (initial_delay > 20) {
-
                         for (int i = 0, j = 0; i < BLOCK_SIZE_FFT; i++, j += 2) {
-
                             // Range [-1,1]
                             normalizedRawData = (float) rawData[i]
                                     / (float) Short.MAX_VALUE;
-
                             //filter = ((double) (fastA * normalizedRawData))
                             // + (fastB * filter);
                             filter = normalizedRawData;
-
                             //Hannings window
                             double x = (2 * Math.PI * i) / (BLOCK_SIZE_FFT - 1);
                             double winValue = (1 - Math.cos(x)) * 0.5d;
-
                             // Real Part
                             audioDataForFFT[j] = filter * winValue;
-
                             // Imaginary part
                             audioDataForFFT[j + 1] = 0.0;
                         }
@@ -587,8 +579,8 @@ public class MainActivity extends AppCompatActivity {
                                 @Override
                                 public void run() {
                                     Log.v("NOISE", String.valueOf(dbATimeDisplay));
-                                    if (start_flag == 1 && msg != null) {
-                                        setValue(String.valueOf(dbATimeDisplay), msg);
+                                    if (start_flag == 1 && latitude != null && longitude != null) {
+                                        setValue(String.valueOf(dbATimeDisplay), latitude, longitude);
                                         //textView.setText(String.valueOf(dbATimeDisplay));
                                     }
 
@@ -688,7 +680,6 @@ public class MainActivity extends AppCompatActivity {
                 stop_button.setVisibility(View.VISIBLE);
                 start_button.setVisibility(View.VISIBLE);
                 stopRecording();
-
                 start_flag = 0;
             }
         });
@@ -758,10 +749,11 @@ public class MainActivity extends AppCompatActivity {
 
     private class MyLocationListener implements LocationListener {
         public void onLocationChanged(Location location) {
-            msg = "La " + location.getLatitude() + "  Lo " + location.getLongitude();
+            latitude = "" + location.getLatitude();
+            longitude = "" + location.getLongitude();
             if (start_flag == 1) {
                 //setValue(msg);
-                textView.setText(msg);
+                textView.setText(latitude + " " + longitude);
                 //Toast.makeText(getBaseContext(), "location lis has been working nnow" + msg, Toast.LENGTH_SHORT).show();
             }
         }
